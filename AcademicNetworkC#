@@ -1,0 +1,1045 @@
+using System;//filtered:"ass", "shit", "fuck", "dumb", "kill", "bitch", "dick", "pussy", "nigger", "cunt"
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+
+namespace AcademicSupportNetwork
+{
+    internal class Programd
+    {
+        static void Main(string[] args) 
+        {
+            Network network = new Network();
+            network.LoadData();
+            network.Run();
+        }
+    }
+}
+public class Network
+{
+    private List<User> users = new List<User>();
+    private List<StudyGroup> groups = new List<StudyGroup>();
+    private User currentUser = null;
+
+    public void Run()
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("      ACADEMIC SUPPORT NETWORK      ");
+            Console.ResetColor();
+            Console.WriteLine("\n\nMain Menu:");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("1. Register");
+            Console.WriteLine("2. Login");
+            Console.WriteLine("3. Reset Data");
+            Console.WriteLine("4. Exit");
+            Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("\nSelect an option: ");
+            Console.ResetColor();
+            string option = Console.ReadLine();
+
+            switch (option)
+            {
+                case "1":
+                    Console.Clear();
+                    Register();
+                    break;
+
+                case "2":
+                    Console.Clear();
+                    Login();
+                    break;
+
+                case "3":
+                    Console.Clear();
+                    ResetData();
+                    break;
+
+                case "4":
+                    Console.Clear();
+                    SaveData();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Goodbye!");
+                    Console.ResetColor();
+                    return;
+
+                default:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\nInvalid option. Try again.");
+                    Console.ResetColor();
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    break;
+            }
+        }
+    }
+
+    public void Register()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("         REGISTER           ");
+        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter username: ");
+        string username = Console.ReadLine();
+        string password = ReadPassword("Enter password: ");
+        Console.ResetColor();
+
+        if (FindUser(username) != null)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nUsername already exists. Try again.");
+            Console.ResetColor();   
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            return;
+        }
+
+        users.Add(new User(username, password));
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("\nRegistration successful.");
+        Console.ResetColor();
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    public void Login()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("           LOGIN            ");
+        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter username: ");
+        string username = Console.ReadLine();
+        string password = ReadPassword("Enter password: ");
+        Console.ResetColor();
+        currentUser = FindUser(username, password);
+        if (currentUser != null)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nLogin successful.");
+            Console.ResetColor();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            LoggedInMenu();
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nInvalid credentials.");
+            Console.ResetColor();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+        }
+    }
+
+    private void LoggedInMenu()
+    {
+        while (currentUser != null)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"    Welcome, {currentUser.Username}   ");
+            Console.ResetColor();
+            Console.WriteLine("\nUser Menu:");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("1. Create Study Group");
+            Console.WriteLine("2. Join Study Group");
+            Console.WriteLine("3. View My Study Groups");
+            Console.WriteLine("4. View All Users and Their Groups");
+            Console.WriteLine("5. Send Message to Group");
+            Console.WriteLine("6. View Messages in Group");
+            Console.WriteLine("7. Leave Study Group");
+            Console.WriteLine("8. Remove Account");
+            Console.WriteLine("9. Logout");
+            Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("\nSelect an option: ");
+            Console.ResetColor();
+            string option = Console.ReadLine();
+
+            switch (option)
+            {
+                case "1":
+                    Console.Clear();
+                    CreateGroup();
+                    break;
+
+                case "2":
+                    Console.Clear();
+                    JoinGroup();
+                    break;
+
+                case "3":
+                    Console.Clear();
+                    ViewMyGroups();
+                    break;
+
+                case "4":
+                    Console.Clear();
+                    ViewAllUsersAndGroups();
+                    break;
+
+                case "5":
+                    Console.Clear();
+                    SendMessageToGroup();
+                    break;
+
+                case "6":
+                    Console.Clear();
+                    ViewMessagesInGroup();
+                    break;
+
+                case "7":
+                    Console.Clear();
+                    LeaveGroup();
+                    break;
+
+                case "8":
+                    Console.Clear();
+                    RemoveAccount();
+                    return;
+
+                case "9":
+                    Console.Clear();
+                    currentUser = null;
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Logged out successfully.");
+                    Console.ResetColor();
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    break;
+
+                default:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\nInvalid option. Try again.");
+                    Console.ResetColor();
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    break;
+            }
+        }
+    }
+
+    private void CreateGroup()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    Create Study Group      ");
+        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter the subject of the study group: ");
+        Console.ResetColor();
+        string subject = Console.ReadLine();
+        groups.Add(new StudyGroup(subject, currentUser));
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("\nStudy group created successfully.");
+        Console.ResetColor();
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    private void JoinGroup()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("      Join Study Group      ");
+        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("\nAvailable Groups to Join:");
+        Console.ResetColor();
+        bool hasGroups = false;
+        for (int i = 0; i < groups.Count; i++)
+        {
+            if (!groups[i].IsMember(currentUser)) 
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"ID: {i}, Subject: {groups[i].Subject}");
+                Console.ResetColor();
+                hasGroups = true;
+            }
+        }
+
+        if (!hasGroups)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nNo new groups available to join.");
+            Console.ResetColor();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            return;
+        }
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter the ID of the group to join: ");
+        Console.ResetColor();
+        if (int.TryParse(Console.ReadLine(), out int groupId) && groupId >= 0 && groupId < groups.Count)
+        {
+            var group = groups[groupId];
+
+            if (group.IsMember(currentUser))
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\nYou are already a member of this group.");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\nWould you like to introduce yourself to the group? (yes/no): ");
+                Console.ResetColor();
+                string choice = Console.ReadLine().ToLower();
+
+                if (choice == "yes")
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("Enter your introduction message: ");
+                    Console.ResetColor();
+                    string introMessage = Console.ReadLine();
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    group.AddMessage($"[System] {currentUser.Username} has joined the group");
+                    group.AddMessage($"{currentUser.Username}: {introMessage}");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    group.AddMessage($"[System] {currentUser.Username} has joined the group");
+                    Console.ResetColor();
+                }
+
+                group.AddMember(currentUser);
+                currentUser.AddGroup(group);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\nJoined the group successfully.");
+                Console.ResetColor();
+            }
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nInvalid group ID.");
+            Console.ResetColor();
+        }
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    private void LeaveGroup()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    Leave Study Group       ");
+        Console.ResetColor();
+        bool hasGroups = false;
+        for (int i = 0; i < groups.Count; i++)
+        {
+            if (groups[i].IsMember(currentUser))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"ID: {i}, Subject: {groups[i].Subject}");
+                Console.ResetColor();
+                hasGroups = true;
+            }
+        }
+
+        if (!hasGroups)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nYou are not a member of any groups.");
+            Console.ResetColor();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            return;
+        }
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter the ID of the group you want to leave: ");
+        Console.ResetColor();
+        if (int.TryParse(Console.ReadLine(), out int groupId) && groupId >= 0 && groupId < groups.Count)
+        {
+            var group = groups[groupId];
+
+            if (!group.IsMember(currentUser))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nYou are not a member of this group.");
+                Console.ResetColor();
+            }
+            else if (group.Creator == currentUser)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nAs the creator, you cannot leave the group. You may delete it instead.");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\nWould you like to leave a farewell message? (yes/no): ");
+                Console.ResetColor();
+                string choice = Console.ReadLine().ToLower();
+
+                if (choice == "yes")
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("Enter your farewell message: ");
+                    Console.ResetColor();
+                    string farewellMessage = Console.ReadLine();
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    group.AddMessage($"[System] {currentUser.Username} left the group with message: {farewellMessage}");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    group.AddMessage($"[System] {currentUser.Username} has left the group");
+                    Console.ResetColor();
+                }
+
+                group.RemoveMember(currentUser);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\nYou have successfully left the group.");
+                Console.ResetColor();
+            }
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nInvalid group ID.");
+            Console.ResetColor();
+        }
+
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    private void ViewMyGroups()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    My Study Groups\n         ");
+        Console.ResetColor();
+        bool hasGroups = false;
+        for (int i = 0; i < groups.Count; i++)
+        {
+            if (groups[i].IsMember(currentUser))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"ID: {i}, Subject: {groups[i].Subject}");
+                Console.ResetColor();
+                hasGroups = true;
+            }
+        }
+        if (!hasGroups)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("You are not a member of any groups.");
+            Console.ResetColor();
+        }
+        Console.WriteLine("\nPress any key to continue...");
+        Console.ReadKey();
+    }
+
+    private void ViewAllUsersAndGroups()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("  All Users and Groups\n      ");
+        Console.ResetColor();
+        foreach (var user in users)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"User: {user.Username}");
+            Console.ResetColor();
+            foreach (var group in groups)
+            {
+                if (group.IsMember(user))
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($" - Group ID: {groups.IndexOf(group)}, Subject: {group.Subject}");
+                    Console.ResetColor();
+                }
+            }
+        }
+        Console.WriteLine("\nPress any key to continue...");
+        Console.ReadKey();
+    }
+
+    private void SendMessageToGroup()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("    Send Group Message\n      ");
+        Console.ResetColor();
+        bool hasGroups = false;
+        for (int i = 0; i < groups.Count; i++)
+        {
+            if (groups[i].IsMember(currentUser))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"ID: {i}, Subject: {groups[i].Subject}");
+                Console.ResetColor();
+                hasGroups = true;
+            }
+        }
+
+        if (!hasGroups)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nYou are not a member of any groups.");
+            Console.ResetColor();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            return;
+        }
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter the ID of the group to send a message to: ");
+        Console.ResetColor();
+        if (int.TryParse(Console.ReadLine(), out int groupId) && groupId >= 0 && groupId < groups.Count && groups[groupId].IsMember(currentUser))
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("Enter your message: ");
+            Console.ResetColor();
+            string message = Console.ReadLine();
+            groups[groupId].AddMessage($"{currentUser.Username}: {message}");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nMessage sent to the group.");
+            Console.ResetColor();
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nGroup not found or you're not a member.");
+            Console.ResetColor();
+        }
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    private void ViewMessagesInGroup()
+    {
+        Console.Clear();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("      Group Messages\n        ");
+        Console.ResetColor();
+        bool hasGroups = false;
+        for (int i = 0; i < groups.Count; i++)
+        {
+            if (groups[i].IsMember(currentUser))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"ID: {i}, Subject: {groups[i].Subject}");
+                Console.ResetColor();
+                hasGroups = true;
+            }
+        }
+
+        if (!hasGroups)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nYou are not a member of any groups.");
+            Console.ResetColor();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            return;
+        }
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nEnter the ID of the group to view messages: ");
+        Console.ResetColor();
+        if (int.TryParse(Console.ReadLine(), out int groupId) && groupId >= 0 && groupId < groups.Count && groups[groupId].IsMember(currentUser))
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($" Messages in {groups[groupId].Subject}\n  ");
+                Console.ResetColor();
+                var messages = groups[groupId].GetMessages();
+
+                for (int i = 0; i < messages.Count; i++)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"[{i + 1}] {messages[i]}");
+                    Console.ResetColor();
+                }
+
+                if (messages.Count == 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("No messages in this group.");
+                    Console.ResetColor();
+                }
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\nOptions:");
+                Console.WriteLine("1. Reply to a message");
+                Console.WriteLine("2. Send new message");
+                Console.WriteLine("3. Return to menu");
+                Console.Write("\nSelect an option: ");
+                Console.ResetColor();
+
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        if (messages.Count > 0)
+                        {
+                            Console.Clear();
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("\nCurrent Messages:");
+                            Console.ResetColor();
+                            for (int i = 0; i < messages.Count; i++)
+                            {
+                                Console.WriteLine($"[{i + 1}] {messages[i]}");
+                            }
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write("\nEnter the message number you want to reply to: ");
+                            Console.ResetColor();
+                            if (int.TryParse(Console.ReadLine(), out int messageNum) &&
+                                messageNum >= 1 && messageNum <= messages.Count)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.Write("Enter your reply: ");
+                                Console.ResetColor();
+                                string reply = Console.ReadLine();
+                                string originalMessage = messages[messageNum - 1];
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                string replyMessage = $"{currentUser.Username} replied to [{originalMessage}]: {reply}";
+                                Console.ResetColor();
+                                groups[groupId].AddMessage(replyMessage);
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine("\nReply sent successfully.");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine("\nInvalid message number.");
+                                Console.ResetColor();
+                            }
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("\nNo messages to reply to.");
+                            Console.ResetColor();
+                        }
+                        Console.WriteLine("Press any key to continue...");
+                        Console.ReadKey();
+                        break;
+
+                    case "2":
+                        Console.Clear();
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"\nNew Message in {groups[groupId].Subject}");
+                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Write("Enter your message: ");
+                        Console.ResetColor();
+                        string newMessage = Console.ReadLine();
+                        groups[groupId].AddMessage($"{currentUser.Username}: {newMessage}");
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("\nMessage sent successfully.");
+                        Console.ResetColor();
+                        Console.WriteLine("Press any key to continue...");
+                        Console.ReadKey();
+                        break;
+
+                    case "3":
+                        return;
+
+                    default:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("\nInvalid option. Please try again.");
+                        Console.ResetColor();
+                        Console.WriteLine("Press any key to continue...");
+                        Console.ReadKey();
+                        break;
+                }
+            }
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nGroup not found or you're not a member.");
+            Console.ResetColor();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+        }
+    }
+
+    public void RemoveAccount()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("     Remove Account \n        ");
+        Console.ResetColor();
+        while (true)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("Are you sure you want to delete your account? (yes/no): ");
+            Console.ResetColor();
+            string input = Console.ReadLine().ToLower();
+
+            if (input == "yes")
+            {
+                for (int i = 0; i < users.Count; i++)
+                {
+                    if (users[i] == currentUser)
+                    {
+                        users.RemoveAt(i);
+                        foreach (var group in groups)
+                        {
+                            group.RemoveMember(currentUser);
+                        }
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("\nAccount removed successfully.");
+                        Console.ResetColor();
+                        Console.WriteLine("Press any key to continue...");
+                        Console.ReadKey();
+                        currentUser = null;
+                        return;
+                    }
+                }
+            }
+            else if (input == "no")
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nAccount deletion canceled.");
+                Console.ResetColor();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nError: Invalid input. Please enter 'yes' or 'no'.");
+                Console.ResetColor();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
+        }
+    }
+
+    private User FindUser(string username, string password = null)
+    {
+        return users.FirstOrDefault(user => user.Username == username && (password == null || user.Password == password));
+    }
+
+    public void ResetData()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("      Reset Data \n           ");
+        Console.ResetColor();
+
+        users.Clear();
+        groups.Clear();
+        currentUser = null;
+
+        try
+        {
+            if (File.Exists("users.txt"))
+            {
+                File.Delete("users.txt");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Data reset successfully.");
+                Console.ResetColor();
+            }
+        }
+        catch (IOException ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error resetting data: {ex.Message}");
+            Console.ResetColor();
+        }
+        Console.WriteLine("\nPress any key to continue...");
+        Console.ReadKey();
+    }
+
+    public void LoadData()
+    {
+        try
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("      Loading Data...\n          ");
+            Console.ResetColor();
+
+            if (File.Exists("users.txt"))
+            {
+                foreach (var line in File.ReadAllLines("users.txt"))
+                {
+                    var parts = line.Split(',');
+                    if (parts.Length == 2)
+                    {
+                        users.Add(new User(parts[0], parts[1]));
+                    }
+                }
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("User data loaded successfully.");
+                Console.ResetColor();
+            }
+
+            if (File.Exists("groups.txt"))
+            {
+                var lines = File.ReadAllLines("groups.txt");
+                StudyGroup currentGroup = null;
+
+                foreach (var line in lines)
+                {
+                    if (line == "END_GROUP" && currentGroup != null)
+                    {
+                        groups.Add(currentGroup);
+                        currentGroup = null;
+                    }
+                    else
+                    {
+                        var parts = line.Split(',');
+
+                        if (parts.Length == 2)
+                        {
+                            string subject = parts[0];
+                            string creatorUsername = parts[1];
+                            User creator = FindUser(creatorUsername);
+
+                            if (creator != null)
+                            {
+                                currentGroup = new StudyGroup(subject, creator);
+                            }
+                        }
+                        else if (currentGroup != null && parts.Length == 1)
+                        {
+                            if (FindUser(parts[0]) != null)
+                            {
+                                currentGroup.AddMember(FindUser(parts[0]));
+                            }
+                            else
+                            {
+                                string message = line.Trim();
+                                currentGroup.AddMessage(message);
+                            }
+                        }
+                    }
+                }
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Group data loaded successfully.");
+                Console.ResetColor();
+            }
+
+            Console.WriteLine("\nPress any key to continue...");
+            Console.ReadKey();
+        }
+        catch (IOException ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error loading data: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine("\nPress any key to continue...");
+            Console.ReadKey();
+        }
+    }
+
+    public void SaveData()
+    {
+        try
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("      Saving Data...\n           ");
+            Console.ResetColor();
+            using (StreamWriter writer = new StreamWriter("users.txt"))
+            {
+                foreach (var user in users)
+                {
+                    writer.WriteLine($"{user.Username},{user.Password}");
+                }
+            }
+
+            using (StreamWriter writer = new StreamWriter("groups.txt"))
+            {
+                foreach (var group in groups)
+                {
+                    writer.WriteLine($"{group.Subject},{group.Creator.Username}");
+                    foreach (var member in group.GetMembers())
+                    {
+                        writer.WriteLine(member.Username);
+                    }
+
+                    foreach (var message in group.GetMessages())
+                    {
+                        writer.WriteLine(message);
+                    }
+
+                    writer.WriteLine("END_GROUP");
+                }
+            }
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Data saved successfully.");
+            Console.ResetColor();
+            Console.WriteLine("\nPress any key to continue...");
+            Console.ReadKey();
+        }
+        catch (IOException ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error saving data: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine("\nPress any key to continue...");
+            Console.ReadKey();
+        }
+    }
+
+    public string ReadPassword(string prompt)
+    {
+        string password = "";
+        Console.Write(prompt);
+
+        while (true)
+        {
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+
+            if (keyInfo.Key == ConsoleKey.Enter)
+                break;
+
+            if (keyInfo.Key == ConsoleKey.Backspace)
+            {
+                if (password.Length > 0)
+                {
+                    password = password.Substring(0, password.Length - 1);
+                    Console.Write("\b \b");
+                }
+            }
+            else
+            {
+                password += keyInfo.KeyChar;
+                Console.Write("*");
+            }
+        }
+
+        Console.WriteLine();
+        return password;
+    }
+}
+
+public class Person
+{
+    public string Username { get; }
+    public string Password { get; }
+
+    protected Person(string username, string password)
+    {
+        Username = username;
+        Password = password;
+    }
+}
+
+public class User : Person
+{
+    public List<StudyGroup> MyGroups { get; private set; } = new List<StudyGroup>();
+
+    public User(string username, string password) : base(username, password) { }
+
+    public void AddGroup(StudyGroup group)
+    {
+        if (!MyGroups.Contains(group))
+            MyGroups.Add(group);
+    }
+}
+
+public class StudyGroup
+{
+    public string Subject { get; }
+    public User Creator { get; }
+    private List<Person> members = new List<Person>();
+    private List<string> messages = new List<string>();
+    private readonly string[] explicitWords = { "ass", "shit", "fuck", "dumb", "kill", "bitch", "dick", "pussy", "nigger", "cunt" };
+
+    public StudyGroup(string subject, User creator)
+    {
+        Subject = subject;
+        Creator = creator;
+        members.Add(creator);
+    }
+
+    private string FilterMessage(string message)
+    {
+        string filteredMessage = message;
+
+        foreach (string word in explicitWords)
+        {
+            string pattern = $@"\b{word}\w*\b|\w*{word}\w*";
+
+            filteredMessage = System.Text.RegularExpressions.Regex.Replace(
+                filteredMessage,
+                pattern,
+                match =>
+                {
+                    string matchedText = match.Value;
+                    int wordIndex = matchedText.IndexOf(word);
+
+                    if (wordIndex != -1)
+                    {
+                        string beforeWord = matchedText.Substring(0, wordIndex);
+                        string afterWord = matchedText.Substring(wordIndex + word.Length);
+                        string asterisks = new string('*', word.Length);
+
+                        return beforeWord + asterisks + afterWord;
+                    }
+
+                    return match.Value;
+                },
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            );
+        }
+
+        return filteredMessage;
+    }
+
+    public void AddMessage(string text)
+    {
+        string filteredText = FilterMessage(text);
+        messages.Add(filteredText);
+    }
+
+    public void AddMember(Person user)
+    {
+        if (!members.Contains(user))
+        {
+            members.Add(user);
+            if (user is User u)
+            {
+                u.AddGroup(this);
+            }
+        }
+    }
+
+    public void RemoveMember(Person user)
+    {
+        if (members.Contains(user))
+        {
+            members.Remove(user);
+            if (user is User u)
+            {
+                u.MyGroups.Remove(this);
+            }
+        }
+    }
+
+    public bool IsMember(Person user) => members.Contains(user);
+
+    public void ViewMessages()
+    {
+        if (messages.Count == 0)
+        {
+            Console.WriteLine("No messages in this group.");
+        }
+        else
+        {
+            foreach (var message in messages)
+            {
+                Console.WriteLine(message);
+            }
+        }
+    }
+
+    public List<Person> GetMembers() => members;
+    public List<string> GetMessages() => messages;
+}
