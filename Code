@@ -1,4 +1,4 @@
-using System;//filtered:"ass", "shit", "fuck", "dumb", "kill", "bitch", "dick", "pussy", "nigger", "cunt"
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
